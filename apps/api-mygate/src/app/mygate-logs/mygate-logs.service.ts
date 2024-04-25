@@ -5,27 +5,27 @@ import { MyGateLogDto } from './dto/mygate-log.dto';
 @Injectable()
 export class MyGateLogsService {
   constructor(private prismaService: PrismaService) {}
-  async getDataForDeviceLogInExcel(deviceId: number,fromDate: number, toDate: number){
+  async getDataForDeviceLogInExcel(deviceId: string,fromTimestamp: number, toTimestamp: number){
+    console.log(deviceId , fromTimestamp , toTimestamp)
+    const device = await  this.prismaService.device.findFirst({
+      where:{
+        deviceId: deviceId
+      }
+    })
+    if(!device) throw new HttpException('device not found',HttpStatus.NOT_FOUND);
 
-    const response : any= await this.prismaService.$queryRaw` select b.access_display , b.access_ref_id ,a.timestamp, a.status, a.direction, a.mygate_response from mygate_logs a INNER JOIN mygate_cards b ON a.mygate_card_id = b.id where mygate_card_id IN (select id from mygate_cards where device_id = ${deviceId}) and timestamp > ${fromDate} and timestamp  <= ${toDate};`
+    console.log(device.id,fromTimestamp,toTimestamp);
 
+    const response : any= await this.prismaService.$queryRaw`
+    SELECT b.access_display, b.access_ref_id, a.timestamp, a.status, a.direction, a.mygate_response
+    FROM mygate_logs AS a
+    INNER JOIN mygate_cards AS b ON a.mygate_card_id = b.id
+    WHERE a.mygate_card_id IN (SELECT id FROM mygate_cards WHERE device_id = ${device.id})
+    AND a.created_at >= TO_TIMESTAMP(${fromTimestamp}) AND a.created_at <= TO_TIMESTAMP(${toTimestamp});
+    `
 
-    const responseData = []
-    responseData.push([
-      'access_display',
-      'access_ref_id',
-      'timestamp',
-      'status',
-      'direction',
-      'mg_resonse'
-    ])
-    
-
-    for(const data of response){
-      const lg = JSON.stringify(data['mygate_response']);
-      responseData.push([data['access_display'], data['access_ref_id'], data['timestamp'], data['status'], data['direction'],lg ])
-    }
-    return responseData
+    console.log(response);
+    return response;
     
   }
 

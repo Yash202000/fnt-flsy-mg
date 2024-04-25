@@ -22,6 +22,7 @@ import { UserAuthGuard } from '../core/auth/user-auth.guard';
 import {
   AddMyGateCardDto,
   EditMyGateCardDto,
+  GetMyGateCardDto,
   MyGateCardDto,
 } from './dto/mygate-card.dto';
 
@@ -32,10 +33,11 @@ export class MyGateCardsController {
   constructor(private myGateCardsService: MyGateCardsService) {}
 
   @ApiOperation({ summary: 'Get all cards' })
-  @ApiResponse({ status: 200, description: 'Success', type: [MyGateCardDto] })
-  @Get()
-  getMyGateCards(): Promise<MyGateCardDto[]> {
-    return this.myGateCardsService.getMyGateCards();
+  @ApiResponse({ status: 200, description: 'Success', type: [GetMyGateCardDto] })
+  @ApiParam({ name: 'deviceId', type: 'string', description: 'Example ID: Fountlab_tag_01' })
+  @Get(':deviceId')
+  getMyGateCards(@Param('deviceId') deviceId: string): Promise<GetMyGateCardDto[]> {
+    return this.myGateCardsService.getMyGateCards(deviceId);
   }
 
   @ApiOperation({ summary: 'Get Card by id' })

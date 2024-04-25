@@ -6,10 +6,11 @@ import { MyGateModule } from '../mygate/mygate.module';
 import { AuthModule } from '../core/auth/auth.module';
 import { AuthService } from '../core/auth/auth.service';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [PrismaClientMygateModule, MyGateModule, AuthModule],
   controllers: [MyGateCardsController],
-  providers: [MyGateCardsService, AuthService, ConfigService],
+  providers: [MyGateCardsService, AuthService,JwtService , ConfigService],
 })
 export class MyGateCardsModule {}

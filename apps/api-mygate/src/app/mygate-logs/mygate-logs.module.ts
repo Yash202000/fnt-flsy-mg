@@ -9,12 +9,14 @@ import { MainFluxService } from '../mainflux/mainflux.service';
 import { AuthModule } from '../core/auth/auth.module';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../core/auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [PrismaClientMygateModule, MyGateModule, MainFluxModule, AuthModule],
   controllers: [MyGateLogsController],
   providers: [
     MyGateLogsService,
+    JwtService,
     MyGateService,
     MainFluxService,
     AuthService,

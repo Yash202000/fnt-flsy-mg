@@ -16,6 +16,9 @@ import { AuthModule } from './core/auth/auth.module';
 import { AuthService } from './core/auth/auth.service';
 import { CommunicationModule } from './communication/communication.module';
 
+import { UserModule } from './users/user.module';
+import { JwtModule } from '@nestjs/jwt';
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -28,6 +31,9 @@ import { CommunicationModule } from './communication/communication.module';
     PrismaClientMygateModule,
     AuthModule,
     CommunicationModule,
+    UserModule,
+    JwtModule
+    
   ],
   controllers: [AppController],
   providers: [

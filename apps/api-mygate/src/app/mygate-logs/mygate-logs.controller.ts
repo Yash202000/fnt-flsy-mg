@@ -16,10 +16,24 @@ import { MyGateLogDto } from './dto/mygate-log.dto';
 import * as xlsx from 'xlsx';
 
 @ApiTags('mygate-logs')
-@UseGuards(UserAuthGuard)
+@UseGuards(UserAuthGuard) 
 @Controller('mygate-logs')
 export class MyGateLogsController {
   constructor(private myGateLogsService: MyGateLogsService) {}
+
+  @ApiOperation({summary: "export residents data by society"})
+  @ApiQuery({ name: 'deviceId', description: 'Device ID', type: String  ,required: true })
+  @ApiQuery({ name: 'from', description: 'from timestamp', type: Number,required: true })
+  @ApiQuery({ name: 'to', description: 'to timestamp', type: Number,required: true })
+  @Get('report')
+  @HttpCode(HttpStatus.OK)
+  async exportDeviceLogInExcel( 
+  @Query('deviceId') deviceId: string,
+  @Query('from') fromDate: number,
+  @Query('to') toDate: number) {
+    const data = await this.myGateLogsService.getDataForDeviceLogInExcel(deviceId, +fromDate, +toDate);
+    return data
+  }
 
   // TODO: add filters by device, by card, by time, by notification
   @ApiOperation({ summary: 'Get all logs' })
@@ -34,35 +48,7 @@ export class MyGateLogsController {
   }
 
 
-  @ApiOperation({summary: "export residents data by society"})
-  @ApiQuery({ name: 'device_id', description: 'Device ID', type: String  ,required: true })
-  @ApiQuery({ name: 'from', description: 'from timestamp', type: Number,required: true })
-  @ApiQuery({ name: 'to', description: 'to timestamp', type: Number,required: true })
-  @Get('report')
-  @HttpCode(HttpStatus.OK)
-  async exportDeviceLogInExcel( 
-  @Query('device_id') deviceId: number,
-  @Query('from') fromDate: number,
-  @Query('to') toDate: number,@Res() res) {
-    const data = await this.myGateLogsService.getDataForDeviceLogInExcel(+deviceId, +fromDate, +toDate);
-
-    // Create a workbook and add a worksheet
-    const ws = xlsx.utils.aoa_to_sheet(data);
-    const wb = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(wb, ws, 'Sheet 1');
-
-    // Save the workbook to a buffer
-    const buffer = xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' });
-
-    // Set the response headers
-    res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename=logs.xlsx',
-    });
-
-    // Send the buffer as the response
-    res.send(buffer);
-  }
+  
 
   @Get(':id')
   getMyGateLog(@Param('id') id: number): Promise<MyGateLogDto> {

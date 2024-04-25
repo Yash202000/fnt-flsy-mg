@@ -3,20 +3,47 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   AddMyGateCardDto,
   EditMyGateCardDto,
+  GetMyGateCardDto,
   MyGateCardDto,
 } from './dto/mygate-card.dto';
 
 @Injectable()
 export class MyGateCardsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
-  async getMyGateCards() {
-    const cards = await this.prismaService.myGateCard.findMany({
-      include: { device: { select: { deviceId: true } } },
+  async getMyGateCards(deviceId: string): Promise<GetMyGateCardDto[]> {
+    // check for device and get device cards and mygate cards from the device
+
+    const device = await this.prismaService.device.findFirst({
+      where: {
+        deviceId: deviceId
+      },
+      include: {
+        myGateCards: true,
+        deviceCards: true
+      }
+    })
+
+    if (!device) throw new HttpException("device not found", HttpStatus.NOT_FOUND);
+
+    // first take mygatecards and devicecards out from the object.
+
+    const mygateCards = device.myGateCards;
+    const deviceCards = device.deviceCards;
+    
+    // Iterate over each item in mygateCards
+    const mygateCardsWithPresence = mygateCards.map(mygateCard => {
+      // Check if the accessDisplay of the current mygateCard exists in deviceCards
+      const isPresent = deviceCards.some(deviceCard => deviceCard.cardId === mygateCard.accessDisplay);
+
+      // Return the mygateCard with the isPresent field added
+      return {
+        ...mygateCard,
+        isPresent
+      };
     });
-    return cards.map((c) => {
-      return { ...c, deviceId: c.device.deviceId, device: undefined };
-    });
+
+    return mygateCardsWithPresence
   }
 
   async getMyGateCard(id: number) {
