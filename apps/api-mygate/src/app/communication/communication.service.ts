@@ -1,16 +1,20 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Prisma, PrismaService } from '@fnt-flsy/prisma-client-mygate';
 import { MainFluxService } from '../mainflux/mainflux.service';
 import { MyGateService } from '../mygate/mygate.service';
 import { AccessNotifyDto } from '../core/dto/access-notify.dto';
 import {
   API_URL,
+  DEVICE_SYNC_CRON,
   MQTT_DOMAIN_MYGATE,
   MQTT_PORT_MYGATE,
 } from '../core/consts/env.consts';
 import { DateTimeForDeviceDto } from './dto/communication.dto';
 import { AccessSyncDto } from '../core/dto/access-sync.dto';
 import { AccessSyncAckDto } from '../core/dto/access-sync-ack.dto';
+import { Cron } from '@nestjs/schedule';
+import * as mqtt from 'mqtt';
+
 
 @Injectable()
 export class CommunicationService {
@@ -19,6 +23,116 @@ export class CommunicationService {
     private mainFluxService: MainFluxService,
     private myGateService: MyGateService
   ) { }
+  private connections: Map<string, any> = new Map();
+
+  @Cron(DEVICE_SYNC_CRON, {
+    name: 'deviceSyncMQTT',
+  })
+  async deviceSyncMQTT() {
+    try {
+      const devices = await this.prismaService.device.findMany({});
+      const toBeAdded = devices.filter((c) => !this.connections.has(c.thingId));
+      console.log("toBe added .. :  ", toBeAdded);
+
+      // TODO: implement workers
+
+      for (const device of toBeAdded) {
+        await this.addNewConnection(device.thingId, device.thingKey, device.channelId, `channels/${device.channelId}/messages/unique`)
+      }
+
+    } catch (e) {
+      Logger.log('deviceSync', e);
+    }
+  }
+
+
+  async addNewConnection(
+    thingId: string,
+    thingKey: string,
+    channelId: string,
+    topicName: string
+  ) {
+    const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
+    const mqttOptions = {
+      clientId,
+      clean: true,
+      connectTimeout: 4000,
+      username: thingId,
+      password: thingKey,
+      reconnectPeriod: 1000,
+
+      // additional options can be added here
+    };
+
+    // Connect to the MQTT broker
+    const client = mqtt.connect(`mqtt://${MQTT_DOMAIN_MYGATE}:${MQTT_PORT_MYGATE}`, mqttOptions);
+    const subscriptionTopic = `channels/${channelId}/messages/mygate-notify`;
+
+    // Handle incoming messages
+    client.on('message', async (topic, message) => {
+      const topic_res = topic.split("/")
+      console.log(topic_res);
+      console.log(`Received message on ${topic}: ${message.toString()}`); // Log the received message
+
+      const channel_id = topic_res[1];
+
+      const notifyTopic = topic_res[3];
+
+      console.log(notifyTopic);
+
+      const deviceToPublish = await this.prismaService.device.findFirst({
+        where: {
+          channelId: channel_id
+        }
+      })
+
+
+      if (notifyTopic === 'mygate-notify') {
+        const publishedMessage = message.toString();
+        try {
+          const deviceMessage: AccessNotifyDto = JSON.parse(publishedMessage);
+
+          console.log(deviceMessage);
+
+          if ('ci' in deviceMessage && 'ts' in deviceMessage && 'st' in deviceMessage && 'dr' in deviceMessage) {
+            await this.accessNotify(deviceToPublish.deviceId, deviceMessage);
+          } else {
+            console.log("just displaying the message: ", deviceMessage);
+          }
+          
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    });
+
+
+
+    // Subscribe to the specified topic
+    client.on('connect', () => {
+      client.subscribe(subscriptionTopic, (err) => {
+        if (err) {
+          Logger.error(`Error while subscribing to ${subscriptionTopic}: ${err}`);
+        } else {
+          Logger.log(`Subscribed to ${subscriptionTopic} for thingId: ${thingId}`);
+        }
+      });
+    });
+
+    // Store the connection in the map
+    this.connections.set(thingId, client);
+  }
+
+
+  // Function to disconnect from the MQTT broker
+  disconnect() {
+    this.connections.forEach((client) => {
+      client.end();
+    });
+    this.connections.clear();
+  }
+
+
 
   async accessNotify(deviceId: string, accessNotifyDto: AccessNotifyDto) {
     // get device by device id
