@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@prisma/client/mygate"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_MYGATE")
+}
+
+model Device {
+  id                Int           @id @default(autoincrement()) @map("id")
+  deviceId          String        @unique @map("device_id")
+  deviceKey         String?       @map("device_key")
+  name              String        @map("name")
+  thingId           String        @map("thing_id")
+  thingKey          String        @map("thing_key")
+  channelId         String        @map("channel_id")
+  lastSyncTimestamp Int           @map("last_sync_timestamp")
+  isMyGateDevice    Boolean       @default(false) @map("is_mygate_device")
+  isDeviceKeyExempt Boolean       @default(false) @map("is_device_key_exempt")
+  myGateCards       MyGateCard[]
+  syncMessages      SyncMessage[]
+  iAmHereLogs       IAmHereLog[]
+  syncAckLogs       SyncAckLog[]
+  deviceCards       DeviceCard[]
+
+  @@map("devices")
+}
+
+model MyGateCard {
+  id               Int    @id @default(autoincrement()) @map("id")
+  accessEntityType String @map("access_entity_type")
+  accessUuidType   String @map("access_uuid_type")
+  accessRefId      String @map("access_ref_id")
+  accessUuid       String @map("access_uuid")
+  accessDisplay    String @map("access_display")
+  deviceId         Int    @map("device_id")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  logs MyGateLog[]
+
+  @@unique([deviceId, accessRefId])
+  @@map("mygate_cards")
+}
+
+model MyGateLog {
+  id                             Int       @id @default(autoincrement()) @map("id")
+  timestamp                      Int       @map("timestamp")
+  status                         String    @map("status")
+  direction                      String    @map("direction")
+  myGateCardId                   Int       @map("mygate_card_id")
+  createdAt                      DateTime? @default(now()) @map("created_at") @db.Timestamptz()
+  isNotifiedToMyGate             Boolean?  @map("is_notified_to_mygate")
+  myGateResponse                 Json?     @map("mygate_response")
+  myGateResponseTimestamp        DateTime? @map("mygate_response_timestamp")
+  isNotifiedToMyGateSuccessfully Boolean?  @map("is_notified_to_mygate_successfully")
+
+  tag MyGateCard @relation(fields: [myGateCardId], references: [id], onDelete: Cascade)
+
+  @@map("mygate_logs")
+}
+
+model SyncMessage {
+  id        Int    @id @default(autoincrement()) @map("id")
+  syncToken String @map("sync_token")
+  deviceId  Int    @map("device_id")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  cards SyncMessageCard[]
+
+  @@unique([deviceId, syncToken])
+  @@map("sync_messages")
+}
+
+enum SyncMessageCardAction {
+  ADD
+  REMOVE
+}
+
+model SyncMessageCard {
+  id            Int                   @id @default(autoincrement()) @map("id")
+  syncMessageId Int                   @map("sync_message_id")
+  cardId        String                @map("access_display")
+  status        SyncMessageCardAction @map("status")
+
+  card SyncMessage @relation(fields: [syncMessageId], references: [id], onDelete: Cascade)
+
+  @@map("sync_message_cards")
+}
+
+model DeviceCard {
+  id       Int    @id @default(autoincrement()) @map("id")
+  deviceId Int    @map("device_id")
+  cardId   String @map("card_id")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, cardId])
+  @@map("device_cards")
+}
+
+model IAmHereLog {
+  id        Int      @id @default(autoincrement()) @map("id")
+  deviceId  Int      @map("device_id")
+  timestamp DateTime @default(now()) @map("timestamp") @db.Timestamptz()
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("i_am_here_logs")
+}
+
+model SyncAckLog {
+  id        Int @id @default(autoincrement()) @map("id")
+  deviceId  Int @map("device_id")
+  timestamp Int @map("timestamp")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("sync_ack_logs")
+}

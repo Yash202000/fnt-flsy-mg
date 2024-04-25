@@ -1,0 +1,46 @@
+{
+  "name": "prisma-schema-mygate",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/prisma-schema-mygate/src",
+  "projectType": "library",
+  "targets": {
+    "prisma": {
+      "command": "prisma",
+      "options": {
+        "cwd": "libs/prisma-schema-mygate"
+      }
+    },
+    "generate-types": {
+      "command": "npx prisma generate",
+      "options": {
+        "cwd": "libs/prisma-schema-mygate"
+      }
+    },
+    "migrate-dev-create-only": {
+      "command": "npx prisma migrate dev --name '' --create-only",
+      "options": {
+        "cwd": "libs/prisma-schema-mygate"
+      }
+    },
+    "migrate": {
+      "command": "npx prisma migrate dev --name ''",
+      "options": {
+        "cwd": "libs/prisma-schema-mygate"
+      }
+    },
+    "migrate-reset": {
+      "command": "npx prisma migrate reset --force",
+      "options": {
+        "cwd": "libs/prisma-schema-mygate"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/prisma-schema-mygate/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}
