@@ -121,3 +121,17 @@ model SyncAckLog {
 
   @@map("sync_ack_logs")
 }
+
+
+model User {
+  id                Int                    @id @default(autoincrement())
+  email             String                 @unique
+  phoneNumber       String?                @map("phone_number")
+  firstName         String                 @map("first_name")
+  lastName          String                 @map("last_name")
+  isActive          Boolean                @default(true) @map("is_active")
+  password          String?
+  token             String?
+ 
+  @@map("users")
+}

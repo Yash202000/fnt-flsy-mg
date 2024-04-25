@@ -6,6 +6,8 @@ import { MainFluxService } from '../mainflux/mainflux.service';
 import { MyGateService } from '../mygate/mygate.service';
 import { AuthService } from '../core/auth/auth.service';
 import { ConfigService } from '@nestjs/config';
+import { AuthModule } from '../core/auth/auth.module';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [PrismaClientMygateModule],
@@ -16,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
     MyGateService,
     AuthService,
     ConfigService,
+    JwtService,
   ],
 })
 export class CommunicationModule {}

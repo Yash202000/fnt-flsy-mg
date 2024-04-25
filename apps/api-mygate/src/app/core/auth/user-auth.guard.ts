@@ -11,6 +11,10 @@ export class UserAuthGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
 
-    return this.authService.validateUserRequest(request);
+    // console.log(request)
+    // const data = context.switchToHttp().getRequest();
+    // const user = request.user
+
+    return this.authService.validateBearerToken(request );
   }
 }
