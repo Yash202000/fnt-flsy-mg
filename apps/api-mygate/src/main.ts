@@ -9,7 +9,7 @@ import { PORT } from './app/core/consts/env.consts';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  const port = PORT || 3000;
+  const port = PORT || 3005;
 
   const config = new DocumentBuilder()
     .setTitle('FountLab Flux MyGate API')
@@ -22,7 +22,7 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.useStaticAssets(join(__dirname, '..','..','..','apps','api-mygate','src','assets', 'public'));
+  app.useStaticAssets(join(__dirname, '..','..','..','dist','mygate-ui'));
   app.setBaseViewsDir(join(__dirname, '..','..','..','apps','api-mygate','src','assets', 'views'));
   app.setViewEngine('hbs');
 
