@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <title>App</title>
+</head>
+<body>
+    
+
+    {{!-- modal section --}}
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" id="exampleModalBody">
+            ...
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+
+    {{!-- navbar section --}}
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <a class="navbar-brand" href="https://fountlab.io/">
+            <img src="./fount-lab-logo.png" width="145px" height="21px" alt="">
+        </a>
+    </nav>
+
+    <div class="card text-center" style="margin: 1%;">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#state-section" data-toggle="tab">Header</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link " href="#device-section" data-toggle="tab">Device</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#card-section"  data-toggle="tab">Tag</a>
+                </li>
+               
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <!-- device sync section -->
+                <div class="tab-pane active" id="device-section">
+                    <h3 class="card-title">Device Sync</h3>
+                    <form id="device-sync-form">
+                        <div class="form-group">
+                            <label for="deviceId">Enter Device Id</label>
+                            <input type="text" class="form-control" id="deviceId" aria-describedby="emailHelp" placeholder="SE001">
+                           
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="sync-button">Sync</button>
+                    </form>
+                    <div id="sync-result" class="mt-4"></div>
+                </div>
+                
+                <!-- card info section -->
+                <div class="tab-pane" id="card-section">
+                    <h3 class="card-title">Mygate Tag</h3>
+                    <form id="card-sync-form">
+                        <div class="form-group">
+                             <label for="carddeviceId">Enter Device Id</label>
+                            <input type="text" class="form-control" id="carddeviceId" aria-describedby="emailHelp" placeholder="SE001">
+                            
+                            <br>
+                            <label for="mygatecard">Enter Mygate card</label>
+                            <input type="text" class="form-control" id="mygatecard" aria-describedby="emailHelp" placeholder="981632">
+                            
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="card-button">Get</button>
+                    </form>
+                    <div id="card-result" class="mt-4"></div>
+                </div>
+                
+                <!-- state section -->
+                <div class="tab-pane" id="state-section">
+                    <h3 class="card-title">Set MyGate api Secret</h3>
+                    <form id="set-header-form">
+                        <div class="form-group">
+                             <label for="apiHeader">Enter API KEY</label>
+                            <input type="text" class="form-control" id="apiHeader" aria-describedby="emailHelp" placeholder="xxxxx-xxxx">
+                       
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="header-button">LogIn</button>
+                        <button type="button" class="btn btn-danger" id="logout-button" style="display: none">LogOut</button>
+                    </form>
+                    <div id="card-result" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Output section for displaying responses -->
+    <div class="container">
+        <div id="output" class="mt-4"></div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('.nav-link').on('click', function () {
+                $('.tab-pane').hide();
+                $($(this).attr('href')).show();
+            });
+
+            // Handle form submission
+            $('#device-sync-form').submit(function (event) {
+                event.preventDefault();
+                syncDevice();
+            });
+
+            $('#card-sync-form').submit(function (event) {
+                event.preventDefault();
+                getDeviceCard();
+            });
+
+
+             $('#set-header-form').submit(function (event) {
+                event.preventDefault();
+                setHeaderPopUp();
+            });
+
+            $('#logout-button').click(function () {
+                $('#login-button').show();
+                $('#logout-button').hide();
+
+                $('#apiHeader').val(''); // Clear the API key input
+
+                const modalBody = document.getElementById('exampleModalBody');
+
+                modalBody.innerHTML = ``;
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                            <p><b>Successfully LogOut!</b></p>
+                    </div>
+                `;
+            
+                $('#exampleModal').modal('show');
+            });
+
+
+
+            function setHeaderPopUp(){
+                const apikey = $('#apiHeader').val();
+                const modalBody = document.getElementById('exampleModalBody');
+
+                modalBody.innerHTML = ``;
+                modalBody.innerHTML = `
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        <p><b>Successfully LogIn Use APIs' now!</b></p>
+                    </div>
+                `
+                $('#exampleModal').modal('show');
+                $('#login-button').hide();
+                 $('#logout-button').show();
+
+            }
+            
+
+            function getDeviceCard() {
+                const apikey = $('#apiHeader').val();
+                const deviceId = $('#carddeviceId').val();
+                const access_display = $('#mygatecard').val();
+                $.ajax({
+                    headers: {
+                        "api-key" : apikey
+                    },
+                    url: `{{ API_URL }}/mygate/card/${deviceId}/${access_display}`,
+                    success: function (data) {
+
+                        const modalBody = document.getElementById('exampleModalBody');
+
+                        modalBody.innerHTML = ``;
+                        modalBody.innerHTML = `
+                            <div class="alert alert-success alert-dismissible" role="alert">
+                               <p><b>API request was successful!</b><br>
+                                ${JSON.stringify(data)}
+                                </p>
+                            </div>
+                        `
+                        $('#exampleModal').modal('show');
+                    },
+                    error: function (error) {
+        
+                        const modalBody = document.getElementById('exampleModalBody');
+
+                        if(error.responseJSON){
+                            if(error.responseJSON.statusCode==403) {
+                                modalBody.innerHTML = ``;
+                                modalBody.innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible" role="alert">
+                                        <p><b>API request failed!</b><br>Message: ${error.responseJSON.message} Please set Header!</p>
+                                    </div>
+                                `;
+                            }else{
+                                modalBody.innerHTML = ``;
+                                modalBody.innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible" role="alert">
+                                         <p><b>API request failed!</b></p>
+                                    </div>
+                                `;
+                            }
+                        }
+                       
+
+                        $('#exampleModal').modal('show');
+                       
+                    }
+                });
+            }
+
+            function syncDevice() {
+                const apikey = $('#apiHeader').val();
+                const deviceId = $('#deviceId').val();
+                $.ajax({
+                    type: 'POST',
+                     headers: {
+                        "api-key": apikey
+                    },
+                    url: `{{ API_URL }}/mygate/sync/${deviceId}`,
+                    success: function (data) {
+                        const modalBody = document.getElementById('exampleModalBody');
+
+                        modalBody.innerHTML = ``;
+                        modalBody.innerHTML = `
+                            <div class="alert alert-success alert-dismissible" role="alert">
+                                <p><b>API request was successful!</b></p>
+                            </div>
+                        `
+                        $('#exampleModal').modal('show');
+                    },
+                    error: function (error) {
+        
+                        const modalBody = document.getElementById('exampleModalBody');
+
+                        if(error.responseJSON){
+                            if(error.responseJSON.statusCode==403) {
+                                modalBody.innerHTML = ``;
+                                modalBody.innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible" role="alert">
+                                       <p><b> API request failed!</b><br> Message: ${error.responseJSON.message} Please set Header!</p>
+                                    </div>
+                                `;
+                            }else{
+                                modalBody.innerHTML = ``;
+                                modalBody.innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible" role="alert">
+                                      <p><b>API request failed!</b></p>
+                                    </div>
+                                `;
+                            }
+                        }
+                       
+
+                        $('#exampleModal').modal('show');
+                       
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

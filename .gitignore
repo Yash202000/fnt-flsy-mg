@@ -43,7 +43,6 @@ coverage
 .env.local
 
 # compiled output
-dist
 tmp
 /out-tsc
 
